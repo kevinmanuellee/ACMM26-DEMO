@@ -1,0 +1,3603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>MEMORY DUEL · GAZE CAPTURE</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;800;900&display=swap');
+
+    :root {
+      --bg: #02040a;
+      --panel: rgba(10, 20, 40, 0.85);
+      --panel-strong: rgba(6, 14, 30, 0.92);
+      --cyan: #00f2ff;
+      --cyan-soft: #c9fbff;
+      --purple: #b200ff;
+      --ink: #ffffff;
+      --muted: #aaccff;
+      --good: #96ffd1;
+      --warn: #ffd56a;
+      --line: rgba(0, 242, 255, 0.28);
+      --shadow: 0 0 40px rgba(0, 242, 255, 0.18);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: var(--ink);
+      overflow: hidden;
+    }
+
+    .cyber-bg {
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+      background-size: 80px 80px;
+      animation: gridMove 25s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(80px, 80px); }
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 30px;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(15px);
+      border-bottom: 1px solid #00f2ff44;
+      z-index: 20;
+    }
+
+    .nav-logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #00f2ff, #b200ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-link {
+      background: transparent;
+      border: 1px solid var(--cyan);
+      color: var(--muted);
+      padding: 6px 20px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: 0.2s;
+      font-family: inherit;
+    }
+
+    .nav-link.active,
+    .nav-link:hover {
+      color: var(--ink);
+      background: #00f2ff22;
+      border-color: #b200ff;
+    }
+
+    .pages {
+      flex: 1;
+      position: relative;
+      z-index: 2;
+      overflow: hidden;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .arena {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #videoScreen,
+    #questionScreen,
+    #reviewScreen,
+    #resultScreen {
+      align-items: flex-start;
+      overflow-y: auto;
+      padding: 20px 20px 120px;
+    }
+
+    .card {
+      background: var(--panel);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 242, 255, 0.4);
+      border-radius: 30px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      max-width: 560px;
+      width: 92%;
+    }
+
+    h1,
+    h2 {
+      background: linear-gradient(135deg, #00f2ff, #0077ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 800;
+    }
+
+    .lead {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    .input-group input {
+      width: 82%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--cyan);
+      border-radius: 40px;
+      padding: 12px 25px;
+      font-size: 1.1rem;
+      color: var(--ink);
+      outline: none;
+      font-family: inherit;
+      text-align: center;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #00f2ff, #0072ff);
+      border: none;
+      padding: 14px 35px;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #000;
+      cursor: pointer;
+      text-transform: uppercase;
+      margin: 15px 5px 0;
+      transition: 0.25s;
+      box-shadow: 0 0 20px #00f2ff;
+      font-family: inherit;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #b200ff, #00f2ff);
+      box-shadow: 0 0 40px #b200ff;
+      transform: scale(1.04);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--ink);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: none;
+    }
+
+    .calibration-card {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      text-align: left;
+    }
+
+    .calibration-card h2,
+    .calibration-card p {
+      text-align: center;
+    }
+
+    .calibration-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .calibration-item {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #e1f4ff;
+      line-height: 1.6;
+      font-size: 0.92rem;
+    }
+
+    .status-band {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(178, 0, 255, 0.2);
+      background: rgba(178, 0, 255, 0.08);
+      color: #f0d1ff;
+      text-align: center;
+      line-height: 1.6;
+      min-height: 54px;
+    }
+
+    .hint-band {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 213, 106, 0.18);
+      background: rgba(255, 213, 106, 0.08);
+      color: #ffe39a;
+      text-align: center;
+      line-height: 1.55;
+      font-size: 0.9rem;
+    }
+
+    .watch-stage {
+      width: min(1800px, 98%);
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 24px;
+    }
+
+    .watch-intro {
+      max-width: 1080px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .phase-badge,
+    .watch-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 242, 255, 0.45);
+      background: rgba(4, 14, 30, 0.82);
+      color: #7ee7ff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      box-shadow: 0 0 24px #00f2ff22;
+    }
+
+    .watch-intro h2 {
+      font-size: clamp(2rem, 2.55vw, 2.85rem);
+      line-height: 1.06;
+      max-width: 1120px;
+      background: linear-gradient(135deg, #ffffff, #76dcff 55%, #d99fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .watch-status-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .watch-status-pill.accent {
+      border-color: rgba(178, 0, 255, 0.35);
+      color: #f0d1ff;
+    }
+
+    .shared-watch-wrap {
+      width: min(1700px, 100%);
+      position: relative;
+    }
+
+    .shared-watch-panel {
+      position: relative;
+      padding: 28px 34px 40px;
+      border-radius: 40px;
+      border: 1px solid rgba(0, 242, 255, 0.22);
+      background:
+        radial-gradient(circle at top, rgba(0, 242, 255, 0.08), transparent 40%),
+        rgba(4, 8, 20, 0.9);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 0 50px rgba(0, 242, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .shared-watch-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+      opacity: 0.65;
+    }
+
+    .shared-watch-body {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .shared-video-stage {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 4px 24px 0;
+    }
+
+    .shared-video-stage::before {
+      content: '';
+      position: absolute;
+      inset: 6px 12px 4px;
+      border-radius: 50px;
+      background: radial-gradient(circle at center, rgba(0, 242, 255, 0.09), transparent 60%);
+      pointer-events: none;
+    }
+
+    .phone {
+      width: min(100%, 1000px);
+      aspect-ratio: 16 / 9;
+      border-width: 2px;
+      border-radius: 30px;
+      border: 2px solid var(--cyan);
+      background: linear-gradient(180deg, rgba(12, 18, 34, 0.96), rgba(8, 10, 22, 0.96));
+      box-shadow: 0 0 65px #00f2ff44;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #02040a;
+    }
+
+    .shared-feed-tag,
+    .target-tag,
+    .capture-lock-tag {
+      position: absolute;
+      z-index: 7;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(2, 14, 28, 0.78);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .shared-feed-tag {
+      top: 18px;
+      left: 18px;
+      color: var(--cyan-soft);
+      border-color: rgba(0, 242, 255, 0.38);
+    }
+
+    .capture-lock-tag {
+      display: none;
+    }
+
+    .shared-scan-line {
+      position: absolute;
+      inset: 18px;
+      z-index: 6;
+      pointer-events: none;
+      overflow: hidden;
+      border-radius: 26px;
+    }
+
+    .shared-scan-line::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 18%;
+      background: linear-gradient(180deg, transparent, rgba(178, 0, 255, 0.22), transparent);
+      animation: sharedScan 2.8s ease-in-out infinite;
+    }
+
+    @keyframes sharedScan {
+      0%, 100% { top: 10%; }
+      50% { top: 72%; }
+    }
+
+    .ai-companion {
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      z-index: 9;
+      width: 250px;
+      padding: 14px 14px 14px 12px;
+      border-radius: 28px;
+      border: 1px solid rgba(178, 0, 255, 0.34);
+      background:
+        radial-gradient(circle at top, rgba(178, 0, 255, 0.16), transparent 48%),
+        rgba(8, 4, 20, 0.92);
+      box-shadow: 0 0 36px rgba(178, 0, 255, 0.18);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .ai-companion::before {
+      content: '';
+      position: absolute;
+      left: -10px;
+      bottom: 26px;
+      width: 18px;
+      height: 18px;
+      border-left: 1px solid rgba(178, 0, 255, 0.34);
+      border-bottom: 1px solid rgba(178, 0, 255, 0.34);
+      background: rgba(8, 4, 20, 0.92);
+      transform: rotate(45deg);
+    }
+
+    .ai-figure {
+      flex-shrink: 0;
+      width: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ai-figure-head {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid rgba(178, 0, 255, 0.72);
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2), rgba(178, 0, 255, 0.28) 58%, rgba(8, 4, 20, 0.95));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 24px rgba(178, 0, 255, 0.22);
+    }
+
+    .ai-figure-eye-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .ai-figure-eye {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.72);
+      animation: eyeBlink 3s ease-in-out infinite;
+    }
+
+    .ai-figure-eye:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .ai-figure-core {
+      width: 30px;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #00f2ff, #b200ff);
+      box-shadow: 0 0 12px rgba(178, 0, 255, 0.32);
+    }
+
+    .ai-figure-base {
+      width: 42px;
+      height: 18px;
+      border-radius: 16px 16px 12px 12px;
+      border: 2px solid rgba(178, 0, 255, 0.52);
+      border-top: none;
+      background: rgba(178, 0, 255, 0.12);
+    }
+
+    @keyframes eyeBlink {
+      0%, 44%, 52%, 100% { transform: scaleY(1); opacity: 1; }
+      48% { transform: scaleY(0.15); opacity: 0.8; }
+    }
+
+    .ai-companion-copy {
+      color: #ead9ff;
+      line-height: 1.55;
+    }
+
+    .ai-companion-copy strong {
+      display: block;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .ai-companion-copy span {
+      display: block;
+      font-size: 0.78rem;
+      color: #cfb0f7;
+    }
+
+    .phone-transition-notice {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.85);
+      border: 1px solid var(--cyan);
+      border-radius: 15px;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--cyan);
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      text-shadow: 0 0 10px var(--cyan);
+      backdrop-filter: blur(5px);
+      white-space: nowrap;
+    }
+
+    .phone-transition-notice.show {
+      opacity: 1;
+    }
+
+    .video-start-overlay {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 18;
+      display: none;
+      min-width: 220px;
+      padding: 16px 22px;
+      border-radius: 22px;
+      border: 1px solid rgba(0, 242, 255, 0.5);
+      background: rgba(2, 10, 22, 0.92);
+      color: #f4fbff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 0 28px rgba(0, 242, 255, 0.18);
+      backdrop-filter: blur(12px);
+    }
+
+    .video-start-overlay.show {
+      display: block;
+    }
+
+    .video-start-overlay strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--cyan-soft);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+    }
+
+    .bottom-btn {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+
+    .quiz-full {
+      display: flex;
+      width: min(1900px, 95%);
+      min-height: min(760px, calc(100vh - 180px));
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(20px);
+      border: 1px solid #00f2ff;
+      border-radius: 40px;
+      padding: 28px;
+      gap: 20px;
+      box-shadow: 0 0 38px rgba(0, 242, 255, 0.14);
+    }
+
+    .human-zone {
+      flex: 2.5;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+      min-width: 0;
+    }
+
+    .zone-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #00f2ff;
+      margin-bottom: 5px;
+    }
+
+    .question-box {
+      background: rgba(0, 20, 50, 0.7);
+      border: 1px solid #00f2ff;
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 25px #00f2ff33;
+    }
+
+    .question-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .question-chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 242, 255, 0.28);
+      background: rgba(8, 16, 34, 0.85);
+      color: #ddf6ff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .question-chip.accent {
+      border-color: rgba(178, 0, 255, 0.3);
+      color: #efc4ff;
+    }
+
+    .question-title {
+      font-size: clamp(2.2rem, 3vw, 3rem);
+      color: #fff;
+      margin-bottom: 10px;
+      line-height: 1.1;
+    }
+
+    .timer-bar {
+      width: 100%;
+      height: 8px;
+      background: #1a2a4a;
+      border-radius: 10px;
+      margin: 16px 0 10px;
+      overflow: hidden;
+    }
+
+    .timer-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffaa00, #ff5a1f);
+      width: 100%;
+      border-radius: 10px;
+      transition: width 0.1s linear;
+    }
+
+    .question-support {
+      color: #b2cff6;
+      line-height: 1.55;
+      font-size: 0.92rem;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .option-card {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      background: rgba(0, 15, 35, 0.8);
+      border: 2px solid #00f2ff;
+      border-radius: 20px;
+      padding: 22px 12px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+      color: #f4fbff;
+      font-family: inherit;
+      line-height: 1.35;
+    }
+
+    .option-card:hover {
+      background: rgba(0, 242, 255, 0.18);
+      border-color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 0 30px #00f2ff;
+    }
+
+    .option-card.locked {
+      pointer-events: none;
+    }
+
+    .option-card.chosen {
+      border-color: #fff;
+      animation: pulseChosen 0.3s ease;
+    }
+
+    @keyframes pulseChosen {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .option-card.correct {
+      background: #00ff8822;
+      border-color: #0f0;
+      box-shadow: 0 0 35px #0f0;
+    }
+
+    .option-card.wrong {
+      background: #ff333322;
+      border-color: #f33;
+      box-shadow: 0 0 35px #f33;
+    }
+
+    .question-feedback {
+      min-height: 22px;
+      color: #cdd8ff;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .duel-score {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      width: 100%;
+      gap: 16px;
+      padding-top: 16px;
+    }
+
+    .duel-score span {
+      font-size: 1.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .human-score {
+      color: #00f2ff;
+    }
+
+    .ai-score {
+      color: #b200ff;
+      margin-left: auto;
+    }
+
+    .score-icon {
+      font-size: 2rem;
+    }
+
+    .duel-bot-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(8, 4, 20, 0.8);
+      border: 1px solid rgba(178, 0, 255, 0.5);
+      transition: all 0.25s ease;
+    }
+
+    .duel-bot-icon.correct-glow {
+      border-color: rgba(0, 255, 200, 0.9);
+      box-shadow: 0 0 25px rgba(0, 255, 200, 0.7);
+      background: rgba(0, 30, 30, 0.8);
+    }
+
+    .duel-bot-icon.wrong-glow {
+      border-color: rgba(255, 80, 100, 0.9);
+      box-shadow: 0 0 25px rgba(255, 80, 100, 0.7);
+      background: rgba(30, 0, 10, 0.8);
+    }
+
+    .duel-bot-figure {
+      width: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .duel-bot-head {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(178, 0, 255, 0.8);
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15), rgba(178, 0, 255, 0.3) 60%, rgba(8, 4, 20, 0.9));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(178, 0, 255, 0.3);
+      transition: all 0.25s ease;
+    }
+
+    .correct-glow .duel-bot-head {
+      border-color: rgba(0, 255, 200, 0.9);
+      box-shadow: 0 0 18px rgba(0, 255, 200, 0.7);
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3), rgba(0, 255, 200, 0.3) 60%, rgba(0, 20, 20, 0.9));
+    }
+
+    .wrong-glow .duel-bot-head {
+      border-color: rgba(255, 80, 100, 0.9);
+      box-shadow: 0 0 18px rgba(255, 80, 100, 0.7);
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3), rgba(255, 80, 100, 0.3) 60%, rgba(30, 0, 10, 0.9));
+    }
+
+    .duel-bot-eyes {
+      display: flex;
+      gap: 4px;
+    }
+
+    .duel-bot-eye {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+      transition: all 0.25s ease;
+    }
+
+    .correct-glow .duel-bot-eye {
+      background: #7fffe0;
+      box-shadow: 0 0 8px rgba(0, 255, 200, 1);
+    }
+
+    .wrong-glow .duel-bot-eye {
+      background: #ffa0b0;
+      box-shadow: 0 0 8px rgba(255, 80, 100, 1);
+    }
+
+    .duel-bot-core {
+      width: 16px;
+      height: 3px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #00f2ff, #b200ff);
+      transition: all 0.25s ease;
+    }
+
+    .correct-glow .duel-bot-core {
+      background: linear-gradient(90deg, #00ffc8, #00d4ff);
+    }
+
+    .wrong-glow .duel-bot-core {
+      background: linear-gradient(90deg, #ff5064, #ff8090);
+    }
+
+    .duel-bot-base {
+      width: 22px;
+      height: 8px;
+      border-radius: 6px 6px 4px 4px;
+      border: 2px solid rgba(178, 0, 255, 0.6);
+      border-top: none;
+      background: rgba(178, 0, 255, 0.15);
+      transition: all 0.25s ease;
+    }
+
+    .correct-glow .duel-bot-base {
+      border-color: rgba(0, 255, 200, 0.8);
+      background: rgba(0, 255, 200, 0.2);
+    }
+
+    .wrong-glow .duel-bot-base {
+      border-color: rgba(255, 80, 100, 0.8);
+      background: rgba(255, 80, 100, 0.2);
+    }
+
+    .ai-zone {
+      flex: 1.2;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid #b200ff;
+      border-radius: 25px;
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 30px #b200ff33;
+      min-width: 0;
+    }
+
+    .ai-zone .zone-label {
+      color: #b200ff;
+      text-align: center;
+    }
+
+    .ai-processor {
+      width: 80px;
+      height: 80px;
+      align-self: center;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .processor-chip {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(145deg, #1a1040, #0c0620);
+      border: 2px solid rgba(178, 0, 255, 0.7);
+      clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 30px rgba(178, 0, 255, 0.35), inset 0 0 20px rgba(178, 0, 255, 0.1);
+      animation: processorHum 3s ease-in-out infinite;
+    }
+
+    @keyframes processorHum {
+      0%, 100% { box-shadow: 0 0 30px rgba(178, 0, 255, 0.35), inset 0 0 20px rgba(178, 0, 255, 0.1); }
+      50% { box-shadow: 0 0 45px rgba(178, 0, 255, 0.55), inset 0 0 30px rgba(178, 0, 255, 0.2); }
+    }
+
+    .processor-chip::before {
+      content: '';
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0, 242, 255, 0.5);
+      background: radial-gradient(circle, rgba(0, 242, 255, 0.2), transparent 60%);
+      animation: innerSpin 6s linear infinite;
+    }
+
+    @keyframes innerSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .processor-chip::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #00f2ff;
+      border-radius: 50%;
+      box-shadow: 0 0 14px #00f2ff, 0 0 28px #00f2ff88;
+      animation: dotPulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.6); opacity: 1; }
+    }
+
+    .processor-pins {
+      position: absolute;
+      inset: -6px;
+      pointer-events: none;
+    }
+
+    .processor-pins::before,
+    .processor-pins::after {
+      content: '';
+      position: absolute;
+      background: rgba(178, 0, 255, 0.5);
+    }
+
+    .processor-pins::before {
+      top: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 4px;
+      border-radius: 4px;
+      box-shadow: 0 58px 0 0 rgba(178, 0, 255, 0.5);
+    }
+
+    .processor-pins::after {
+      left: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 18px;
+      border-radius: 4px;
+      box-shadow: 58px 0 0 0 rgba(178, 0, 255, 0.5);
+    }
+
+    .ai-status {
+      font-size: 1rem;
+      color: #d7b2ff;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .ai-progress-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 2px;
+    }
+
+    .ai-progress-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(178, 0, 255, 0.2);
+      background: rgba(12, 6, 24, 0.74);
+      transition: 0.25s ease;
+    }
+
+    .ai-progress-item.pending {
+      opacity: 0.75;
+    }
+
+    .ai-progress-item.active {
+      border-color: rgba(178, 0, 255, 0.66);
+      box-shadow: 0 0 24px rgba(178, 0, 255, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .ai-progress-item.correct {
+      border-color: rgba(0, 255, 136, 0.45);
+      background: rgba(0, 255, 136, 0.12);
+    }
+
+    .ai-progress-item.wrong {
+      border-color: rgba(255, 90, 122, 0.44);
+      background: rgba(255, 70, 110, 0.12);
+    }
+
+    .ai-progress-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #f0ddff;
+    }
+
+    .ai-progress-state {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #cf9eff;
+    }
+
+    .ai-progress-item.correct .ai-progress-state {
+      color: #90ffc8;
+    }
+
+    .ai-progress-item.wrong .ai-progress-state {
+      color: #ff9ab0;
+    }
+
+    .result-box {
+      background: rgba(10, 20, 40, 0.9);
+      border: 1px solid #00f2ff;
+      border-radius: 30px;
+      padding: 30px;
+      text-align: center;
+      width: min(1000px, 95%);
+      box-shadow: var(--shadow);
+    }
+
+    .fighters {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin: 30px 0;
+      width: 100%;
+    }
+
+    .fighter {
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 20px;
+      padding: 25px 15px;
+      flex: 1;
+      max-width: 280px;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .fighter.human {
+      border-color: #00f2ff;
+    }
+
+    .fighter.ai {
+      border-color: #b200ff;
+    }
+
+    .fighter .fighter-emoji {
+      font-size: 2.2rem;
+    }
+
+    .fighter .fighter-name {
+      font-size: 1rem;
+      word-break: break-all;
+      color: #ccc;
+    }
+
+    .bar {
+      width: 100%;
+      height: 12px;
+      background: #1a2a4a;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+
+    .fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 10px;
+      transition: width 1s;
+    }
+
+    .human .fill {
+      background: #00f2ff;
+    }
+
+    .ai .fill {
+      background: #b200ff;
+    }
+
+    .fighter .fighter-score {
+      font-size: 1.3rem;
+      color: #fff;
+    }
+
+    .vs-divider {
+      font-size: 2.5rem;
+      color: #00f2ff;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .winner-message {
+      font-size: 1.8rem;
+      margin: 20px 0;
+      color: #ffffff;
+    }
+
+    .thank-you {
+      color: var(--muted);
+      line-height: 1.7;
+      margin: 0 auto 12px;
+      max-width: 48ch;
+    }
+
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    .leaderboard-table th {
+      background: rgba(0, 242, 255, 0.2);
+      padding: 12px;
+    }
+
+    .leaderboard-table td {
+      padding: 12px;
+      border-bottom: 1px solid #1e3350;
+    }
+
+    .result-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .result-chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
+      color: #def2ff;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .result-card {
+      border-radius: 30px;
+      border: 1px solid rgba(0, 242, 255, 0.22);
+      background: var(--panel-strong);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .result-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .result-card-head strong {
+      color: var(--cyan-soft);
+      font-size: 0.92rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .result-card-head span {
+      color: #e7f6ff;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+	    .result-media {
+	      position: relative;
+	      background: #030914;
+	      overflow: hidden;
+	      display: flex;
+	      align-items: center;
+	      justify-content: center;
+	      min-height: 220px;
+	    }
+
+	    .result-media-frame,
+	    .reference-media-frame {
+	      position: relative;
+	      display: inline-block;
+	      max-width: 100%;
+	      line-height: 0;
+	    }
+
+	    .result-media-frame img,
+	    .reference-media-frame img {
+	      max-width: 100%;
+	      max-height: min(62vh, 520px);
+	      width: auto;
+	      height: auto;
+	      display: block;
+	    }
+
+    .result-zone-overlay {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 34%;
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+      border-right: 1px solid rgba(255, 255, 255, 0.2);
+      background: linear-gradient(180deg, rgba(255, 82, 168, 0.3), rgba(0, 242, 255, 0.18));
+      box-shadow: inset 0 0 28px rgba(255, 255, 255, 0.12);
+    }
+
+    .result-zone-overlay.left {
+      left: 0;
+    }
+
+    .result-zone-overlay.center {
+      left: 33%;
+    }
+
+    .result-zone-overlay.right {
+      right: 0;
+    }
+
+    .result-zone-label {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(4, 10, 22, 0.76);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #f1fbff;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      backdrop-filter: blur(12px);
+    }
+
+    .result-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      color: #d7e9f7;
+      line-height: 1.6;
+      background: linear-gradient(180deg, rgba(6, 12, 26, 0.94), rgba(3, 6, 16, 0.92));
+    }
+
+    .result-card-body {
+      display: grid;
+      gap: 12px;
+      padding: 18px 20px 22px;
+    }
+
+    .reference-block {
+      display: grid;
+      gap: 12px;
+      margin-top: 6px;
+      padding: 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .reference-label {
+      color: #a8eeff;
+      font-size: 0.76rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .reference-question {
+      color: #eff9ff;
+      line-height: 1.55;
+      font-size: 0.9rem;
+    }
+
+	    .reference-media {
+	      display: flex;
+	      align-items: center;
+	      justify-content: center;
+	      overflow: hidden;
+	      border-radius: 18px;
+	      border: 1px solid rgba(0, 242, 255, 0.16);
+	      background: #040914;
+	      min-height: 220px;
+	    }
+
+	    .answer-chip-row {
+	      display: flex;
+	      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .answer-chip {
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: #dfefff;
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    .answer-chip.correct {
+      border-color: rgba(150, 255, 209, 0.4);
+      background: rgba(150, 255, 209, 0.12);
+      color: #d8ffee;
+      box-shadow: 0 0 18px rgba(150, 255, 209, 0.12);
+    }
+
+    .answer-chip.selected {
+      border-color: rgba(0, 242, 255, 0.34);
+      background: rgba(0, 242, 255, 0.1);
+      color: #e4fbff;
+      box-shadow: 0 0 18px rgba(0, 242, 255, 0.08);
+    }
+
+    .answer-chip.incorrect {
+      border-color: rgba(255, 121, 154, 0.3);
+      background: rgba(255, 121, 154, 0.12);
+      color: #ffe1e8;
+      box-shadow: 0 0 18px rgba(255, 121, 154, 0.08);
+    }
+
+    .meta-line {
+      color: #ecf8ff;
+      line-height: 1.55;
+      font-size: 0.9rem;
+    }
+
+    .meta-line strong {
+      color: var(--good);
+    }
+
+    .meta-note {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.84rem;
+    }
+
+    .clip-review-stage {
+      width: min(1650px, 98%);
+      display: grid;
+      gap: 20px;
+    }
+
+    .clip-review-hero,
+    .clip-review-summary {
+      padding: 28px 30px;
+      border-radius: 34px;
+      border: 1px solid rgba(0, 242, 255, 0.24);
+      background:
+        radial-gradient(circle at top, rgba(0, 242, 255, 0.1), transparent 42%),
+        rgba(4, 8, 20, 0.92);
+      box-shadow: var(--shadow);
+    }
+
+    .clip-review-hero {
+      text-align: center;
+    }
+
+    .clip-review-hero h2 {
+      font-size: clamp(2rem, 3vw, 3rem);
+      margin: 12px 0;
+      background: linear-gradient(135deg, #ffffff, #7de3ff 55%, #e0acff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .clip-review-hero p {
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 78ch;
+      margin: 0 auto;
+    }
+
+    .clip-review-compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .clip-review-panel {
+      border-radius: 30px;
+      border: 1px solid rgba(0, 242, 255, 0.22);
+      background: var(--panel-strong);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: grid;
+      gap: 0;
+    }
+
+    .clip-review-panel-head {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--cyan-soft);
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+	    .clip-review-reference {
+	      display: flex;
+	    }
+
+    .clip-review-panel-note {
+      padding: 16px 20px 20px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.88rem;
+    }
+
+    .clip-review-summary {
+      display: grid;
+      gap: 16px;
+    }
+
+    .clip-review-question {
+      color: #eff9ff;
+      font-size: clamp(1.15rem, 1.9vw, 1.7rem);
+      line-height: 1.45;
+    }
+
+    .clip-review-answer-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .result-chip.is-correct {
+      border-color: rgba(150, 255, 209, 0.4);
+      background: rgba(150, 255, 209, 0.12);
+      color: #d8ffee;
+    }
+
+    .result-chip.is-wrong {
+      border-color: rgba(255, 121, 154, 0.3);
+      background: rgba(255, 121, 154, 0.12);
+      color: #ffe1e8;
+    }
+
+    .result-chip.is-timeout {
+      border-color: rgba(255, 213, 106, 0.28);
+      background: rgba(255, 213, 106, 0.1);
+      color: #ffe8aa;
+    }
+
+    .page-card {
+      background: var(--panel);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 242, 255, 0.4);
+      border-radius: 30px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      margin: 30px auto;
+      max-width: 760px;
+      width: 92%;
+    }
+
+    .page-card p {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--muted);
+    }
+
+    .protocol-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .protocol-step {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #e6f5ff;
+      line-height: 1.6;
+    }
+
+    .alignment-preview-shell {
+      position: relative;
+      margin-top: 4px;
+      padding: 18px;
+      border-radius: 28px;
+      border: 1px solid rgba(76, 214, 255, 0.18);
+      background:
+        radial-gradient(circle at top, rgba(76, 214, 255, 0.12), transparent 48%),
+        rgba(1, 5, 12, 0.88);
+      overflow: hidden;
+    }
+
+    .alignment-preview-slot {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      border-radius: 24px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+        rgba(2, 8, 16, 0.92);
+    }
+
+    .alignment-preview-slot::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(3, 8, 18, 0.06), rgba(3, 8, 18, 0.44)),
+        radial-gradient(circle at center, transparent 28%, rgba(1, 4, 10, 0.4) 80%);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .alignment-oval {
+      position: absolute;
+      inset: 10% 20%;
+      border-radius: 50% / 56%;
+      border: 2px solid rgba(255, 255, 255, 0.66);
+      box-shadow:
+        0 0 0 12px rgba(255, 255, 255, 0.04),
+        0 0 42px rgba(76, 214, 255, 0.24);
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .alignment-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 22px 22px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.5));
+      opacity: 0.25;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .alignment-badge-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .alignment-badge {
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #def4ff;
+      font-size: 0.84rem;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .alignment-badge.ready {
+      border-color: rgba(143, 255, 203, 0.36);
+      background: rgba(143, 255, 203, 0.1);
+      color: #cffff0;
+    }
+
+    .alignment-badge.alert {
+      border-color: rgba(255, 213, 106, 0.26);
+      background: rgba(255, 213, 106, 0.08);
+      color: #ffe7a8;
+    }
+
+    @media (max-width: 640px) {
+      .alignment-badge-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    #webgazerVideoContainer {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background: transparent !important;
+      pointer-events: none !important;
+      z-index: 1 !important;
+    }
+
+    #webgazerVideoFeed,
+    #webgazerFaceOverlay {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: auto !important;
+      bottom: auto !important;
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 24px !important;
+      z-index: 1 !important;
+    }
+
+    #webgazerVideoFeed {
+      border: 1px solid rgba(76, 214, 255, 0.18);
+      box-shadow: 0 18px 32px rgba(0, 0, 0, 0.28);
+      background: #000;
+      object-fit: cover !important;
+    }
+
+    #webgazerFaceOverlay {
+      z-index: 2 !important;
+      pointer-events: none !important;
+    }
+
+    #webgazerFaceFeedbackBox {
+      position: absolute !important;
+      right: auto !important;
+      bottom: auto !important;
+      pointer-events: none !important;
+      z-index: 3 !important;
+    }
+
+    @media (max-width: 1200px) {
+      .ai-companion {
+        position: static;
+        width: min(360px, 100%);
+        margin: 0 auto;
+      }
+
+      .ai-companion::before {
+        display: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        overflow-y: auto;
+      }
+
+      #videoScreen,
+      #questionScreen,
+      #reviewScreen,
+      #resultScreen {
+        padding: 16px 12px 110px;
+      }
+
+      .navbar {
+        padding: 10px 18px;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .nav-link {
+        flex: 1;
+        padding: 6px 10px;
+      }
+
+      .watch-intro h2 {
+        font-size: 1.7rem;
+      }
+
+      .shared-watch-panel {
+        padding: 22px 18px 28px;
+      }
+
+      .result-box {
+        padding: 20px;
+      }
+
+      .fighters {
+        gap: 10px;
+      }
+
+      .fighter {
+        padding: 15px 10px;
+      }
+
+      .vs-divider {
+        font-size: 2rem;
+      }
+
+      .shared-video-stage {
+        padding: 10px 8px 0;
+      }
+
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .clip-review-compare {
+        grid-template-columns: 1fr;
+      }
+
+      .clip-review-hero,
+      .clip-review-summary {
+        padding: 22px 18px 24px;
+      }
+
+      .clip-review-answer-row {
+        flex-direction: column;
+      }
+
+      .quiz-full {
+        flex-direction: column;
+        min-height: auto;
+        padding: 16px;
+      }
+
+      .ai-zone {
+        padding: 18px;
+      }
+
+      .option-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .option-card {
+        font-size: 1rem;
+        padding: 18px 10px;
+      }
+
+      .question-title {
+        font-size: 1.7rem;
+      }
+
+      .duel-score span {
+        font-size: 1.35rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="cyber-bg"></div>
+  <nav class="navbar">
+    <div class="nav-logo">⚡ MEMORY DUEL</div>
+    <div class="nav-links">
+      <button class="nav-link active" data-page="game">Arena</button>
+      <button class="nav-link" data-page="leaderboard">Leaderboard</button>
+      <button class="nav-link" data-page="protocol">Protocol</button>
+    </div>
+  </nav>
+
+  <div class="pages">
+    <div class="page active" id="gamePage">
+      <div class="arena">
+        <div class="screen active" id="startScreen">
+          <div class="card">
+            <h1>MEMORY DUEL</h1>
+            <p class="lead" style="margin: 10px 0 20px;">
+              Enter your ID or email, align your face in the live preview, then watch three clips with one recall question immediately after each clip.
+            </p>
+            <div class="input-group">
+              <input type="text" id="playerEmail" placeholder="your@email.com or participant ID">
+            </div>
+            <button class="btn" id="startGameBtn">⚡ Enter Arena</button>
+          </div>
+        </div>
+
+        <div class="screen" id="alignmentScreen">
+          <div class="card calibration-card">
+            <h2>Face Alignment</h2>
+            <p class="lead">
+              Once alignment is accepted, the watch phase starts automatically.
+            </p>
+            <div class="alignment-preview-shell">
+              <div class="alignment-preview-slot" id="alignmentPreviewSlot">
+                <div class="alignment-grid" aria-hidden="true"></div>
+                <div class="alignment-oval" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="status-band" id="alignmentStateText">
+              Alignment has not started yet.
+            </div>
+            <div class="hint-band">
+              Open this page over <strong>localhost</strong> so the webcam and local WebGazer assets both load cleanly.
+            </div>
+            <div class="alignment-badge-row">
+              <div class="alignment-badge" id="alignmentFaceState">Face not detected</div>
+              <div class="alignment-badge" id="alignmentPoseState">Pose not verified</div>
+              <div class="alignment-badge" id="alignmentHoldState">Hold not started</div>
+            </div>
+            <div style="text-align:center;">
+              <button class="btn" id="startAlignmentBtn">↻ Restart Camera</button>
+              <button class="btn secondary" id="backToStartBtn">Back</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen" id="videoScreen">
+          <div class="watch-stage">
+            <div class="watch-intro">
+              <div class="phase-badge">Shared Watch Phase</div>
+              <h2>You and AI are watching the clip</h2>
+              <div class="watch-status-row">
+                <div class="watch-status-pill" id="watchClipCounter">Clip 1 / 3</div>
+                <div class="watch-status-pill accent" id="watchSyncState">attention tracking active</div>
+                <div class="watch-status-pill" id="watchCaptureState">Clip snapshot pending</div>
+              </div>
+            </div>
+            <div class="shared-watch-wrap">
+              <div class="shared-watch-panel">
+                <div class="shared-watch-body">
+	                  <div class="shared-video-stage">
+	                    <div class="phone" id="watchFrame">
+	                      <div class="shared-feed-tag">Shared Live Feed</div>
+	                      <video id="watchVideo" playsinline></video>
+	                      <button class="video-start-overlay" id="videoStartOverlay" type="button">
+	                        <strong>Audio Ready</strong>
+	                        Tap to start this clip with sound
+	                      </button>
+	                      <div class="shared-scan-line"></div>
+	                      <div class="capture-lock-tag" id="captureLockTag"></div>
+                      <div class="phone-transition-notice" id="watchTransition">NEXT CLIP</div>
+                    </div>
+                    <div class="ai-companion" aria-hidden="true">
+                      <div class="ai-figure">
+                        <div class="ai-figure-head">
+                          <div class="ai-figure-eye-row">
+                            <div class="ai-figure-eye"></div>
+                            <div class="ai-figure-eye"></div>
+                          </div>
+                        </div>
+                        <div class="ai-figure-core"></div>
+                        <div class="ai-figure-base"></div>
+                      </div>
+                      <div class="ai-companion-copy">
+                        <strong>AI IS WATCHING WITH YOU</strong>
+                        <span id="watchCompanionText">analyzing frames...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-btn">
+            <button class="btn" id="goToSummaryBtn" style="display:none;">🧠 View Final Verdict</button>
+          </div>
+        </div>
+
+        <div class="screen" id="questionScreen">
+          <div class="quiz-full">
+            <div class="human-zone">
+              <div class="zone-label">Your Answer</div>
+              <div class="question-box">
+                <div class="question-meta-row">
+                  <div class="question-chip" id="questionClipLabel">Clip 1 Recall</div>
+                  <div class="question-chip accent">Human Track</div>
+                </div>
+                <div class="question-title" id="questionText">Question text</div>
+                <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+                <p class="question-support" id="questionSupportText">Select one answer before the timer expires.</p>
+              </div>
+              <div class="option-grid" id="optionsGrid"></div>
+              <div class="question-feedback" id="questionFeedback">Select one answer to continue.</div>
+              <div class="duel-score">
+                <span class="human-score"><span class="score-icon">👤</span> <span id="liveHumanScore">0</span></span>
+                <span class="ai-score">
+                  <span class="duel-bot-icon" id="duelBotIcon">
+                    <div class="duel-bot-figure">
+                      <div class="duel-bot-head">
+                        <div class="duel-bot-eyes">
+                          <div class="duel-bot-eye"></div>
+                          <div class="duel-bot-eye"></div>
+                        </div>
+                      </div>
+                      <div class="duel-bot-core"></div>
+                      <div class="duel-bot-base"></div>
+                    </div>
+                  </span>
+                  <span id="liveAiScore">0</span>
+                </span>
+              </div>
+            </div>
+            <div class="ai-zone">
+              <div class="zone-label">AI Recall Feed</div>
+              <div class="ai-processor">
+                <div class="processor-chip">
+                  <div class="processor-pins"></div>
+                </div>
+              </div>
+              <div class="ai-status" id="aiStatusText">AI is scoring this clip.</div>
+              <div class="ai-progress-list" id="aiProgressList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen" id="reviewScreen">
+          <div class="clip-review-stage">
+            <div class="clip-review-hero">
+              <div class="phase-badge">Clip Review</div>
+              <h2 id="reviewTitle">Clip 1 Review</h2>
+              <p id="reviewLeadText">
+                The left panel shows the locked frame with the gaze band. The right panel shows the reference overlay before the next clip begins.
+              </p>
+              <div class="result-meta-row">
+                <div class="result-chip" id="reviewClipChip">Clip 1 / 3</div>
+                <div class="result-chip" id="reviewOutcomeChip">Correct</div>
+                <div class="result-chip" id="reviewPlayerChip">Participant</div>
+              </div>
+            </div>
+            <div class="clip-review-compare">
+              <div class="clip-review-panel">
+                <div class="clip-review-panel-head">Captured Frame + Gaze</div>
+                <div class="result-media" id="reviewCapturedMedia"></div>
+                <div class="clip-review-panel-note" id="reviewCapturedNote">
+                  The locked gaze band appears over the captured frame for this clip.
+                </div>
+              </div>
+              <div class="clip-review-panel">
+                <div class="clip-review-panel-head">Overlayed Frame</div>
+                <div class="reference-media clip-review-reference" id="reviewOverlayMedia"></div>
+                <div class="clip-review-panel-note">
+                  Reference overlay for the same clip.
+                </div>
+              </div>
+            </div>
+            <div class="clip-review-summary">
+              <div class="clip-review-question" id="reviewQuestionText">Question text</div>
+              <div class="clip-review-answer-row" id="reviewAnswerRow"></div>
+              <div class="meta-note" id="reviewResultNote">Result note</div>
+              <div style="text-align:center;">
+                <button class="btn" id="reviewContinueBtn">Next Clip</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen" id="resultScreen">
+          <div class="result-box">
+            <h1>⚔️ VERDICT</h1>
+            <div class="fighters">
+              <div class="fighter human">
+                <div class="fighter-emoji">👤</div>
+                <div class="fighter-name" id="resHumanName"></div>
+                <div class="bar"><div class="fill" id="humanFill"></div></div>
+                <div class="fighter-score"><span id="humanScore">0</span>/3</div>
+              </div>
+              <div class="vs-divider">VS</div>
+              <div class="fighter ai">
+                <div class="fighter-emoji">🤖</div>
+                <div class="fighter-name">AI</div>
+                <div class="bar"><div class="fill" id="aiFill"></div></div>
+                <div class="fighter-score"><span id="aiScore">0</span>/3</div>
+              </div>
+            </div>
+            <div class="winner-message" id="winnerMessage"></div>
+            <div class="thank-you" id="thankYouMessage">
+              Thank you for participating in our demo!<br>
+              If you don't mind, we'll send you the article by email.
+            </div>
+            <button class="btn" id="restartBtn">↺ Rematch</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="leaderboardPage">
+      <div class="page-card">
+        <h2 style="color:#00f2ff; margin-bottom: 14px;">🏆 Leaderboard</h2>
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Callsign</th>
+              <th>Human</th>
+              <th>AI</th>
+              <th>Winner</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="protocolPage">
+      <div class="page-card">
+        <h2 style="color:#00f2ff; margin-bottom: 14px;">📡 Protocol</h2>
+        <p>
+          This standalone page mirrors the Memory Duel structure but adds immediate per-clip questions on top of frame-locked attention capture plus a reference overlay review.
+        </p>
+        <div class="protocol-list">
+          <div class="protocol-step">1. Enter your participant ID or email.</div>
+          <div class="protocol-step">2. Complete a face-alignment check immediately after entry.</div>
+          <div class="protocol-step">3. Watch the Apple Watch, BYD Seal, and KFC clips in sequence.</div>
+          <div class="protocol-step">4. Immediately after each clip, answer its multiple-choice question before the next clip starts.</div>
+          <div class="protocol-step">5. For every clip, one attention snapshot is saved with a coarse left, center, or right estimate.</div>
+          <div class="protocol-step">6. After each question, the review screen shows your locked frame with the gaze band on the left and the matching overlay frame on the right before the next clip begins.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./node_modules/webgazer/dist/webgazer.js"></script>
+  <script>
+    (function() {
+	      const TARGET_CAPTURE_SECOND = 2.0;
+	      const STALE_SIGNAL_MS = 360;
+	      const ALIGNMENT_HOLD_MS = 1400;
+	      const ALIGNMENT_SAMPLE_MS = 120;
+	      const QUESTION_SECONDS = 8;
+	      const AI_ANALYZE_START_MS = 350;
+	      const AI_RESOLVE_DELAY_MS = 1400;
+      const ALIGNMENT_RULES = {
+        minFaceRatio: 0.34,
+        maxFaceRatio: 0.74,
+        maxCenterOffsetX: 0.12,
+        maxCenterOffsetY: 0.14,
+        maxRollDeg: 8,
+        maxNoseOffset: 0.1,
+        faceYawCenterTolerance: 0.035,
+        centerZoneTolerance: 0.11,
+        strongZoneThreshold: 0.2
+      };
+      const FACE_POINTS = {
+        leftEyeInner: 362,
+        leftEyeOuter: 263,
+        rightEyeInner: 133,
+        rightEyeOuter: 33,
+        noseTip: 1,
+        leftIris: [474, 475, 476, 477],
+        rightIris: [469, 470, 471, 472]
+      };
+      const videoLibrary = [
+		        {
+		          url: "ad-apple-watch.mp4",
+		          title: "Ad - Apple Watch",
+		          question: "What was the ECG result?",
+		          options: ["Sinus Rhythm", "Normal Rhythm", "Heart Attack"],
+		          correct: 0,
+		          aiCorrect: true,
+		          anchorFrame: "ad-apple-watch/ad-apple-watch_winning_segment_anchor_anchor_frame.png",
+		          overlay: "ad-apple-watch/ad-apple-watch_winning_segment_anchor_overlay.png"
+		        },
+		        {
+		          url: "ad-byd-seal.mp4",
+		          title: "Ad - BYD Seal",
+		          question: "What is the call to action of this ad?",
+		          options: ["GIVING FREE NTUC VOUCHERS", "BOOK A TEST DRIVE NOW", "BUY BYD SEAL"],
+		          correct: 1,
+		          aiCorrect: true,
+		          anchorFrame: "ad-byd-seal/ad-byd-seal_winning_segment_anchor_anchor_frame.png",
+		          overlay: "ad-byd-seal/ad-byd-seal_winning_segment_anchor_overlay.png"
+		        },
+		        {
+		          url: "ad-kfc.mp4",
+		          title: "Ad - KFC",
+		          question: "Which product that was promoted?",
+		          options: ["FRIED CHICKEN", "NASHVILLE CHICKEN", "CHICKEN SKIN"],
+		          correct: 1,
+		          aiCorrect: true,
+		          anchorFrame: "ad-kfc/ad-kfc_winning_segment_anchor_anchor_frame.png",
+		          overlay: "ad-kfc/ad-kfc_winning_segment_anchor_overlay.png"
+		        }
+		      ];
+
+      let playerEmail = "";
+      let selectedVideos = [];
+      let captureResults = [];
+      let currentIdx = 0;
+      let webgazerStarted = false;
+      let aligned = false;
+      let gameActive = false;
+      let frameCallbackId = null;
+      let rafFallbackId = null;
+      let trackerMonitorId = null;
+      let trackerMonitorLastTick = 0;
+	      let trackerSampleInFlight = false;
+	      let latestAttentionSignal = null;
+	      let alignmentSatisfiedSince = 0;
+	      let currentScreenName = "start";
+	      let questionAdvanceTimer = null;
+	      let questionSelectionLocked = false;
+	      let questionTimerIntervalId = null;
+	      let questionTimerTimeoutId = null;
+	      let aiRevealTimers = [];
+	      let currentHumanResolved = false;
+	      let currentAiResolved = false;
+	      let leaderboardEntrySaved = false;
+
+      const pageMap = {
+        game: document.getElementById("gamePage"),
+        leaderboard: document.getElementById("leaderboardPage"),
+        protocol: document.getElementById("protocolPage")
+      };
+      const navLinks = document.querySelectorAll(".nav-link");
+	      const screens = {
+	        start: document.getElementById("startScreen"),
+	        alignment: document.getElementById("alignmentScreen"),
+	        video: document.getElementById("videoScreen"),
+	        question: document.getElementById("questionScreen"),
+	        review: document.getElementById("reviewScreen"),
+	        result: document.getElementById("resultScreen")
+	      };
+
+      const emailInput = document.getElementById("playerEmail");
+      const startBtn = document.getElementById("startGameBtn");
+      const startAlignmentBtn = document.getElementById("startAlignmentBtn");
+      const backToStartBtn = document.getElementById("backToStartBtn");
+      const alignmentStateText = document.getElementById("alignmentStateText");
+      const alignmentPreviewSlot = document.getElementById("alignmentPreviewSlot");
+      const alignmentFaceState = document.getElementById("alignmentFaceState");
+      const alignmentPoseState = document.getElementById("alignmentPoseState");
+      const alignmentHoldState = document.getElementById("alignmentHoldState");
+      const watchVideo = document.getElementById("watchVideo");
+      const watchFrame = document.getElementById("watchFrame");
+	      const watchTransition = document.getElementById("watchTransition");
+	      const watchClipCounter = document.getElementById("watchClipCounter");
+	      const watchSyncState = document.getElementById("watchSyncState");
+	      const watchCaptureState = document.getElementById("watchCaptureState");
+	      const captureLockTag = document.getElementById("captureLockTag");
+	      const videoStartOverlay = document.getElementById("videoStartOverlay");
+	      const watchCompanionText = document.getElementById("watchCompanionText");
+	      const goToSummaryBtn = document.getElementById("goToSummaryBtn");
+	      const questionClipLabel = document.getElementById("questionClipLabel");
+	      const questionText = document.getElementById("questionText");
+	      const questionSupportText = document.getElementById("questionSupportText");
+	      const timerFill = document.getElementById("timerFill");
+	      const optionsGrid = document.getElementById("optionsGrid");
+	      const questionFeedback = document.getElementById("questionFeedback");
+	      const liveHumanScore = document.getElementById("liveHumanScore");
+	      const liveAiScore = document.getElementById("liveAiScore");
+	      const duelBotIcon = document.getElementById("duelBotIcon");
+	      const aiStatusText = document.getElementById("aiStatusText");
+	      const aiProgressList = document.getElementById("aiProgressList");
+	      const reviewTitle = document.getElementById("reviewTitle");
+	      const reviewLeadText = document.getElementById("reviewLeadText");
+	      const reviewClipChip = document.getElementById("reviewClipChip");
+	      const reviewOutcomeChip = document.getElementById("reviewOutcomeChip");
+	      const reviewPlayerChip = document.getElementById("reviewPlayerChip");
+	      const reviewCapturedMedia = document.getElementById("reviewCapturedMedia");
+	      const reviewCapturedNote = document.getElementById("reviewCapturedNote");
+	      const reviewOverlayMedia = document.getElementById("reviewOverlayMedia");
+	      const reviewQuestionText = document.getElementById("reviewQuestionText");
+	      const reviewAnswerRow = document.getElementById("reviewAnswerRow");
+	      const reviewResultNote = document.getElementById("reviewResultNote");
+	      const reviewContinueBtn = document.getElementById("reviewContinueBtn");
+	      const resHumanName = document.getElementById("resHumanName");
+	      const humanFill = document.getElementById("humanFill");
+	      const aiFill = document.getElementById("aiFill");
+	      const humanScore = document.getElementById("humanScore");
+	      const aiScore = document.getElementById("aiScore");
+	      const winnerMessage = document.getElementById("winnerMessage");
+	      const thankYouMessage = document.getElementById("thankYouMessage");
+	      const restartBtn = document.getElementById("restartBtn");
+
+      function switchPage(name) {
+        Object.keys(pageMap).forEach((key) => pageMap[key].classList.remove("active"));
+        pageMap[name].classList.add("active");
+        navLinks.forEach((link) => link.classList.toggle("active", link.dataset.page === name));
+        if (name === "leaderboard") {
+          renderLeaderboard();
+        }
+        if (name !== "game") {
+          setPreviewVisibility(false);
+        } else if (currentScreenName === "alignment" && webgazerStarted) {
+          setPreviewVisibility(true);
+        }
+      }
+
+      function showScreen(name) {
+        currentScreenName = name;
+        Object.keys(screens).forEach((key) => screens[key].classList.remove("active"));
+        screens[name].classList.add("active");
+        if (name !== "alignment") {
+          setPreviewVisibility(false);
+        } else if (webgazerStarted && pageMap.game.classList.contains("active")) {
+          setPreviewVisibility(true);
+        }
+      }
+
+      navLinks.forEach((link) => {
+        link.addEventListener("click", () => switchPage(link.dataset.page));
+      });
+
+	      function setVideoStartOverlay(visible, message) {
+	        videoStartOverlay.classList.toggle("show", visible);
+	        if (message) {
+	          videoStartOverlay.innerHTML = "<strong>Audio Ready</strong>" + escapeHtml(message);
+	        } else {
+	          videoStartOverlay.innerHTML = "<strong>Audio Ready</strong>Tap to start this clip with sound";
+	        }
+	      }
+
+	      function setBadgeState(element, text, ready) {
+	        element.textContent = text;
+	        element.classList.toggle("ready", ready);
+	        element.classList.toggle("alert", !ready);
+	      }
+
+	      function clearQuestionAdvanceTimer() {
+	        if (questionAdvanceTimer !== null) {
+	          clearTimeout(questionAdvanceTimer);
+	        }
+	        questionAdvanceTimer = null;
+	      }
+
+	      function clearQuestionTimers() {
+	        clearInterval(questionTimerIntervalId);
+	        clearTimeout(questionTimerTimeoutId);
+	        questionTimerIntervalId = null;
+	        questionTimerTimeoutId = null;
+	      }
+
+	      function clearAiRevealTimers() {
+	        aiRevealTimers.forEach((timerId) => clearTimeout(timerId));
+	        aiRevealTimers = [];
+	      }
+
+	      function getRecallCounts() {
+	        return {
+	          answeredCount: captureResults.filter((result) => typeof result.selectedAnswer === "number").length,
+	          correctCount: captureResults.filter((result) => result.answerCorrect === true).length
+	        };
+	      }
+
+	      function getAiRecallCounts() {
+	        return {
+	          resolvedCount: captureResults.filter((result) => result.aiResolved).length,
+	          correctCount: captureResults.filter((result) => result.aiResolved && result.aiCorrect).length
+	        };
+	      }
+
+	      function updateQuestionProgress() {
+	        const total = captureResults.length || 3;
+	        const clipNumber = Math.min(currentIdx + 1, total);
+	        questionClipLabel.textContent = "Clip " + clipNumber + " Recall";
+	      }
+
+	      function updateLiveScores() {
+	        const recallCounts = getRecallCounts();
+	        const aiRecallCounts = getAiRecallCounts();
+	        liveHumanScore.textContent = String(recallCounts.correctCount);
+	        liveAiScore.textContent = String(aiRecallCounts.correctCount);
+	      }
+
+	      function flashDuelBot(isCorrect) {
+	        duelBotIcon.classList.remove("correct-glow", "wrong-glow");
+	        void duelBotIcon.offsetWidth;
+	        duelBotIcon.classList.add(isCorrect ? "correct-glow" : "wrong-glow");
+	        setTimeout(() => {
+	          duelBotIcon.classList.remove("correct-glow", "wrong-glow");
+	        }, 1400);
+	      }
+
+	      function resetDuelBot() {
+	        duelBotIcon.classList.remove("correct-glow", "wrong-glow");
+	      }
+
+	      function startQuestionTimer(seconds, onTimeout) {
+	        clearQuestionTimers();
+	        let remaining = seconds;
+	        timerFill.style.width = "100%";
+	        questionTimerIntervalId = setInterval(() => {
+	          remaining -= 0.1;
+	          timerFill.style.width = Math.max(0, (remaining / seconds) * 100) + "%";
+	          if (remaining <= 0) {
+	            clearQuestionTimers();
+	            timerFill.style.width = "0%";
+	            if (onTimeout) {
+	              onTimeout();
+	            }
+	          }
+	        }, 100);
+	        questionTimerTimeoutId = setTimeout(() => {
+	          clearQuestionTimers();
+	          timerFill.style.width = "0%";
+	          if (onTimeout) {
+	            onTimeout();
+	          }
+	        }, seconds * 1000);
+	      }
+
+	      function renderAiProgressState(result, mode) {
+	        const stateLabel = mode === "pending"
+	          ? "Queued"
+	          : mode === "active"
+	            ? "Analyzing"
+	            : mode === "correct"
+	              ? "Correct"
+	              : "Wrong";
+	        aiProgressList.innerHTML =
+	          '<div class="ai-progress-item ' + mode + '">' +
+	            '<div class="ai-progress-label">' + escapeHtml(result.title) + '</div>' +
+	            '<div class="ai-progress-state">' + stateLabel + '</div>' +
+	          '</div>';
+	      }
+
+	      function getParticipantAnswerText(result) {
+	        if (typeof result.selectedAnswer !== "number") {
+	          return "No answer recorded";
+	        }
+	        return result.options[result.selectedAnswer] + (result.answerCorrect ? " · correct" : " · incorrect");
+	      }
+
+	      function getReviewOutcomeState(result) {
+	        if (typeof result.selectedAnswer !== "number") {
+	          return {
+	            label: "No Answer",
+	            className: "is-timeout"
+	          };
+	        }
+	        return result.answerCorrect
+	          ? { label: "Correct", className: "is-correct" }
+	          : { label: "Wrong", className: "is-wrong" };
+	      }
+
+	      function buildCapturedMediaHtml(result) {
+	        const frameSource = result.anchorFrame || result.frameDataUrl;
+	        if (!frameSource) {
+	          return '<div class="result-empty">No frame snapshot was captured for this clip.</div>';
+	        }
+
+	        const attentionHtml = result.attention
+	          ? '<div class="result-zone-overlay ' + escapeHtml(result.attention.zone) + '"></div>' +
+	            '<div class="result-zone-label">' + escapeHtml(result.attention.zone + " zone") + '</div>'
+	          : "";
+
+	        return '<div class="result-media-frame">' +
+	          '<img src="' + escapeHtml(frameSource) + '" alt="' + escapeHtml(result.title) + ' captured frame">' +
+	          attentionHtml +
+	          '</div>';
+	      }
+
+	      function buildOverlayMediaHtml(result) {
+	        if (!result.overlay) {
+	          return '<div class="result-empty">No overlay frame is available for this clip.</div>';
+	        }
+	        return '<div class="reference-media-frame">' +
+	          '<img src="' + escapeHtml(result.overlay) + '" alt="' + escapeHtml(result.title) + ' overlay frame">' +
+	          '</div>';
+	      }
+
+	      function renderClipReview(result) {
+	        const total = captureResults.length || 3;
+	        const outcome = getReviewOutcomeState(result);
+	        const answerClasses = ["answer-chip"];
+	        if (typeof result.selectedAnswer === "number") {
+	          answerClasses.push("selected");
+	          if (result.answerCorrect) {
+	            answerClasses.push("correct");
+	          } else {
+	            answerClasses.push("incorrect");
+	          }
+	        }
+
+	        reviewTitle.textContent = "Clip " + result.clipNumber + " Review";
+	        reviewLeadText.textContent = "The left panel shows the locked frame with the gaze band. The right panel shows the reference overlay for this same clip.";
+	        reviewClipChip.textContent = "Clip " + result.clipNumber + " / " + total;
+	        reviewOutcomeChip.textContent = outcome.label;
+	        reviewOutcomeChip.className = "result-chip " + outcome.className;
+	        reviewPlayerChip.textContent = playerEmail;
+	        reviewCapturedMedia.innerHTML = buildCapturedMediaHtml(result);
+	        reviewCapturedNote.textContent = result.attention
+	          ? "Captured gaze band: " + result.attention.zone + " zone."
+	          : "No valid gaze band was available for this clip.";
+	        reviewOverlayMedia.innerHTML = buildOverlayMediaHtml(result);
+	        reviewQuestionText.textContent = result.question;
+	        reviewAnswerRow.innerHTML = [
+	          '<div class="' + answerClasses.join(" ") + '"><strong>Your answer:</strong> ' + escapeHtml(getParticipantAnswerText(result)) + '</div>',
+	          '<div class="answer-chip correct"><strong>Correct answer:</strong> ' + escapeHtml(result.options[result.correct]) + '</div>'
+	        ].join("");
+	        reviewResultNote.textContent = result.note;
+	        reviewContinueBtn.textContent = currentIdx + 1 < selectedVideos.length ? "Next Clip" : "View Final Verdict";
+	      }
+
+	      function advanceFromClipReview() {
+	        clearQuestionAdvanceTimer();
+	        if (currentIdx + 1 < selectedVideos.length) {
+	          currentIdx += 1;
+	          void startWatchFlow({ showTransition: true });
+	        } else {
+	          finishRecallFlow();
+	        }
+	      }
+
+	      function maybeAdvanceAfterQuestion() {
+	        if (!currentHumanResolved || !currentAiResolved) {
+	          return;
+	        }
+	        const result = captureResults[currentIdx];
+	        if (!result) {
+	          finishRecallFlow();
+	          return;
+	        }
+	        questionFeedback.textContent = typeof result.selectedAnswer === "number"
+	          ? "Answer locked. Opening clip review..."
+	          : "Time is up. Opening clip review...";
+	        renderClipReview(result);
+	        showScreen("review");
+	      }
+
+	      function disableQuestionOptions() {
+	        optionsGrid.querySelectorAll(".option-card").forEach((card) => {
+	          card.classList.add("locked");
+	        });
+	      }
+
+	      function resolveCurrentQuestion(selectedIndex) {
+	        const result = captureResults[currentIdx];
+	        if (!result || currentHumanResolved) {
+	          return;
+	        }
+
+	        currentHumanResolved = true;
+	        questionSelectionLocked = true;
+	        clearQuestionTimers();
+	        result.selectedAnswer = typeof selectedIndex === "number" ? selectedIndex : null;
+	        result.answerCorrect = typeof selectedIndex === "number" ? selectedIndex === result.correct : false;
+	        disableQuestionOptions();
+
+	        if (typeof selectedIndex === "number") {
+	          optionsGrid.querySelectorAll(".option-card").forEach((optionCard) => {
+	            const optionIndex = Number(optionCard.dataset.optionIndex);
+	            if (optionIndex === selectedIndex) {
+	              optionCard.classList.add("chosen");
+	            }
+	            if (optionIndex === result.correct) {
+	              optionCard.classList.add("correct");
+	            }
+	            if (optionIndex === selectedIndex && selectedIndex !== result.correct) {
+	              optionCard.classList.add("wrong");
+	            }
+	          });
+	        }
+
+	        updateLiveScores();
+	        questionSupportText.textContent = result.actualTime === null
+	          ? "No usable attention snapshot was locked for this clip, but the recall result is still recorded."
+	          : "An attention snapshot was captured and paired with this recall result.";
+	        if (typeof selectedIndex !== "number") {
+	          questionFeedback.textContent = currentAiResolved
+	            ? "Time is up. No answer recorded."
+	            : "Time is up. No answer recorded. Waiting for AI verdict...";
+	        } else if (result.answerCorrect) {
+	          questionFeedback.textContent = currentAiResolved
+	            ? "Correct. AI verdict locked too."
+	            : "Correct. Waiting for AI verdict...";
+	        } else {
+	          questionFeedback.textContent = currentAiResolved
+	            ? "Incorrect. AI verdict locked too."
+	            : "Incorrect. Waiting for AI verdict...";
+	        }
+	        maybeAdvanceAfterQuestion();
+	      }
+
+	      function startAiRecallEvaluation(result) {
+	        clearAiRevealTimers();
+	        resetDuelBot();
+	        renderAiProgressState(result, "pending");
+	        aiStatusText.textContent = "AI verdict is being computed for this clip.";
+	        aiRevealTimers.push(setTimeout(() => {
+	          renderAiProgressState(result, "active");
+	          aiStatusText.textContent = "AI is analyzing this clip.";
+	        }, AI_ANALYZE_START_MS));
+	        aiRevealTimers.push(setTimeout(() => {
+	          result.aiResolved = true;
+	          currentAiResolved = true;
+	          renderAiProgressState(result, result.aiCorrect ? "correct" : "wrong");
+	          aiStatusText.textContent = result.aiCorrect
+	            ? "AI result: correct."
+	            : "AI result: wrong.";
+	          updateLiveScores();
+	          flashDuelBot(result.aiCorrect);
+	          maybeAdvanceAfterQuestion();
+	        }, AI_RESOLVE_DELAY_MS));
+	      }
+
+	      function resetSession() {
+	        clearQuestionAdvanceTimer();
+	        clearQuestionTimers();
+	        clearAiRevealTimers();
+	        stopFrameMonitor();
+	        stopTrackerMonitor();
+	        watchVideo.pause();
+	        watchVideo.onloadedmetadata = null;
+	        watchVideo.onplay = null;
+	        watchVideo.onended = null;
+	        watchVideo.removeAttribute("src");
+	        watchVideo.load();
+	        selectedVideos = [];
+	        captureResults = [];
+	        currentIdx = 0;
+	        latestAttentionSignal = null;
+	        aligned = false;
+	        gameActive = false;
+	        alignmentSatisfiedSince = 0;
+	        trackerSampleInFlight = false;
+	        leaderboardEntrySaved = false;
+	        questionSelectionLocked = false;
+	        currentHumanResolved = false;
+	        currentAiResolved = false;
+	        resetDuelBot();
+	        goToSummaryBtn.style.display = "none";
+	        captureLockTag.textContent = "";
+	        watchClipCounter.textContent = "Clip 1 / 3";
+	        watchSyncState.textContent = "attention tracking active";
+	        watchCaptureState.textContent = "Clip snapshot pending";
+	        watchCompanionText.textContent = "We will capture an attention snapshot and map a coarse attention zone for each clip.";
+	        setVideoStartOverlay(false);
+	        questionClipLabel.textContent = "Clip 1 Recall";
+	        questionText.textContent = "Question text";
+	        questionSupportText.textContent = "Select one answer before the timer expires.";
+	        questionFeedback.textContent = "Select one answer to continue.";
+	        timerFill.style.width = "100%";
+	        liveHumanScore.textContent = "0";
+	        liveAiScore.textContent = "0";
+	        aiStatusText.textContent = "AI verdict is being computed for this clip.";
+	        aiProgressList.innerHTML = "";
+	        optionsGrid.innerHTML = "";
+	        reviewTitle.textContent = "Clip 1 Review";
+	        reviewLeadText.textContent = "The left panel shows the locked frame with the gaze band. The right panel shows the reference overlay before the next clip begins.";
+	        reviewClipChip.textContent = "Clip 1 / 3";
+	        reviewOutcomeChip.textContent = "Pending";
+	        reviewOutcomeChip.className = "result-chip";
+	        reviewPlayerChip.textContent = "Participant";
+	        reviewCapturedMedia.innerHTML = "";
+	        reviewCapturedNote.textContent = "The locked gaze band appears over the captured frame for this clip.";
+	        reviewOverlayMedia.innerHTML = "";
+	        reviewQuestionText.textContent = "Question text";
+	        reviewAnswerRow.innerHTML = "";
+	        reviewResultNote.textContent = "Result note";
+	        reviewContinueBtn.textContent = "Next Clip";
+	        resHumanName.textContent = "";
+	        humanFill.style.width = "0%";
+	        aiFill.style.width = "0%";
+	        humanScore.textContent = "0";
+	        aiScore.textContent = "0";
+	        winnerMessage.textContent = "";
+	        thankYouMessage.style.display = "block";
+	        startAlignmentBtn.disabled = false;
+	        startAlignmentBtn.textContent = "↻ Restart Camera";
+	        alignmentStateText.textContent = "Alignment has not started yet.";
+	        setBadgeState(alignmentFaceState, "Face not detected", false);
+	        setBadgeState(alignmentPoseState, "Pose not verified", false);
+	        setBadgeState(alignmentHoldState, "Hold not started", false);
+	      }
+
+	      function buildSelectedVideos() {
+		        selectedVideos = videoLibrary.map((video, index) => ({
+		          clipIndex: index,
+		          title: video.title,
+		          url: video.url,
+		          question: video.question,
+		          options: video.options.slice(),
+		          correct: video.correct,
+		          aiCorrect: Boolean(video.aiCorrect),
+		          anchorFrame: video.anchorFrame,
+		          overlay: video.overlay
+		        }));
+
+	        captureResults = selectedVideos.map((video, index) => ({
+	          clipNumber: index + 1,
+	          title: video.title,
+	          url: video.url,
+		          question: video.question,
+		          options: video.options.slice(),
+		          correct: video.correct,
+		          anchorFrame: video.anchorFrame,
+		          overlay: video.overlay,
+		          targetSecond: TARGET_CAPTURE_SECOND,
+	          actualTime: null,
+	          frameDataUrl: "",
+	          attention: null,
+	          status: "pending",
+	          selectedAnswer: null,
+	          answerCorrect: null,
+	          aiCorrect: Boolean(video.aiCorrect),
+	          aiResolved: false
+	        }));
+	      }
+
+      function startFlow() {
+        playerEmail = emailInput.value.trim() || "anonymous@demo.com";
+        pauseTracking();
+        resetSession();
+        buildSelectedVideos();
+        switchPage("game");
+        showScreen("alignment");
+        alignmentStateText.textContent = "Participant " + playerEmail + " is ready. Starting camera preview...";
+        void beginAlignment({ autoStart: true });
+      }
+
+	      startBtn.addEventListener("click", startFlow);
+
+	      backToStartBtn.addEventListener("click", () => {
+	        pauseTracking();
+	        showScreen("start");
+	      });
+
+	      videoStartOverlay.addEventListener("click", () => {
+	        watchVideo.play().then(() => {
+	          setVideoStartOverlay(false);
+	        }).catch(() => {
+	          setVideoStartOverlay(true, "Tap again if your browser is still blocking sound");
+	        });
+	      });
+
+	      function updateWatchStatus() {
+	        const total = captureResults.length || 3;
+	        const capturedCount = captureResults.filter((result) => result.status !== "pending").length;
+	        if (currentIdx >= total) {
+	          watchClipCounter.textContent = total + " clips watched";
+	          watchSyncState.textContent = "attention snapshots ready";
+	          watchCaptureState.textContent = "Captured " + capturedCount + " / " + total;
+	          return;
+	        }
+
+	        watchClipCounter.textContent = "Clip " + (currentIdx + 1) + " / " + total;
+	        watchSyncState.textContent = "attention tracking active";
+	        watchCaptureState.textContent = "Captured " + capturedCount + " / " + total;
+	      }
+
+      function showWatchTransition(callback) {
+        watchTransition.classList.add("show");
+        setTimeout(() => {
+          watchTransition.classList.remove("show");
+          if (callback) {
+            setTimeout(callback, 200);
+          }
+        }, 800);
+      }
+
+      function captureFrameDataUrl() {
+        const canvas = document.createElement("canvas");
+        canvas.width = watchVideo.videoWidth;
+        canvas.height = watchVideo.videoHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(watchVideo, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/jpeg", 0.92);
+      }
+
+      function getCurrentAttentionForVideo() {
+        if (!latestAttentionSignal) {
+          return { status: "missing" };
+        }
+
+        if (performance.now() - latestAttentionSignal.timestamp > STALE_SIGNAL_MS) {
+          return { status: "stale" };
+        }
+
+        if (!latestAttentionSignal.hasFace || !latestAttentionSignal.zone) {
+          return { status: "missing" };
+        }
+
+        return {
+          status: latestAttentionSignal.ready ? "ok" : "soft",
+          attention: {
+            zone: latestAttentionSignal.zone,
+            strength: latestAttentionSignal.strength || "soft",
+            score: latestAttentionSignal.score
+          }
+        };
+      }
+
+      function lockCurrentClipCapture(mediaTime) {
+        const result = captureResults[currentIdx];
+        if (!result || result.status !== "pending") {
+          return;
+        }
+
+        result.actualTime = mediaTime;
+	        result.frameDataUrl = result.anchorFrame || captureFrameDataUrl();
+
+        const attentionMeasurement = getCurrentAttentionForVideo();
+	        if (attentionMeasurement.status === "ok") {
+	          result.attention = attentionMeasurement.attention;
+	          result.status = "captured";
+		          result.note = "Attention mapped to the " + attentionMeasurement.attention.zone + " zone for this clip.";
+		          captureLockTag.textContent = "";
+	        } else if (attentionMeasurement.status === "soft") {
+	          result.attention = attentionMeasurement.attention;
+	          result.status = "captured-soft";
+		          captureLockTag.textContent = "";
+	        } else if (attentionMeasurement.status === "stale") {
+	          result.status = "captured-stale";
+		          result.note = "An attention snapshot was captured, but the face-tracking signal was stale.";
+		          captureLockTag.textContent = "";
+	        } else {
+	          result.status = "captured-missing";
+		          result.note = "An attention snapshot was captured, but no usable face signal was available.";
+		          captureLockTag.textContent = "";
+	        }
+
+        watchCompanionText.textContent = "analyzing frames";
+        updateWatchStatus();
+      }
+
+      function stopFrameMonitor() {
+        if (frameCallbackId !== null && typeof watchVideo.cancelVideoFrameCallback === "function") {
+          watchVideo.cancelVideoFrameCallback(frameCallbackId);
+        }
+        if (rafFallbackId !== null) {
+          cancelAnimationFrame(rafFallbackId);
+        }
+        frameCallbackId = null;
+        rafFallbackId = null;
+      }
+
+      function sampleWatchFrame(mediaTime) {
+        if (!gameActive || currentIdx >= selectedVideos.length) {
+          return;
+        }
+        if (captureResults[currentIdx] && captureResults[currentIdx].status === "pending" && mediaTime >= TARGET_CAPTURE_SECOND) {
+          lockCurrentClipCapture(mediaTime);
+        }
+      }
+
+	      function startFrameMonitor() {
+	        stopFrameMonitor();
+	        if (typeof watchVideo.requestVideoFrameCallback === "function") {
+	          const tick = (_now, metadata) => {
+	            sampleWatchFrame(metadata.mediaTime);
+	            if (gameActive && currentIdx < selectedVideos.length) {
+	              frameCallbackId = watchVideo.requestVideoFrameCallback(tick);
+	            }
+	          };
+	          frameCallbackId = watchVideo.requestVideoFrameCallback(tick);
+	          return;
+	        }
+
+	        const fallback = () => {
+	          sampleWatchFrame(watchVideo.currentTime);
+	          if (gameActive && currentIdx < selectedVideos.length) {
+	            rafFallbackId = requestAnimationFrame(fallback);
+	          }
+	        };
+	        rafFallbackId = requestAnimationFrame(fallback);
+	      }
+
+	      function finishRecallFlow() {
+	        gameActive = false;
+	        clearQuestionAdvanceTimer();
+	        clearQuestionTimers();
+	        clearAiRevealTimers();
+	        stopFrameMonitor();
+	        pauseTracking();
+	        watchVideo.pause();
+	        currentIdx = captureResults.length;
+	        updateLiveScores();
+	        resetDuelBot();
+	        setVideoStartOverlay(false);
+	        captureLockTag.textContent = "";
+	        watchCompanionText.textContent = "All clips and questions are complete. Reviewing the final verdict now.";
+	        updateWatchStatus();
+	        renderResults();
+	        showScreen("result");
+	      }
+
+	      function showQuestionForCurrentClip() {
+	        const clip = selectedVideos[currentIdx];
+	        const result = captureResults[currentIdx];
+	        if (!clip || !result) {
+	          finishRecallFlow();
+	          return;
+	        }
+
+	        gameActive = false;
+	        clearQuestionAdvanceTimer();
+	        clearQuestionTimers();
+	        clearAiRevealTimers();
+	        questionSelectionLocked = false;
+	        currentHumanResolved = false;
+	        currentAiResolved = Boolean(result.aiResolved);
+	        pauseTracking();
+	        showScreen("question");
+	        updateQuestionProgress();
+	        updateLiveScores();
+	        resetDuelBot();
+	        questionText.textContent = clip.question;
+	        questionSupportText.textContent = result.actualTime === null
+	          ? "No usable attention snapshot was locked for this clip. Answer before the timer expires."
+	          : "An attention snapshot was captured for this clip. Answer before the timer expires.";
+	        questionFeedback.textContent = "Select one answer to continue.";
+	        timerFill.style.width = "100%";
+	        optionsGrid.innerHTML = "";
+	        aiProgressList.innerHTML = "";
+	        aiStatusText.textContent = "AI verdict is being computed for this clip.";
+
+	        clip.options.forEach((option, index) => {
+	          const card = document.createElement("button");
+	          card.type = "button";
+	          card.className = "option-card";
+	          card.dataset.optionIndex = String(index);
+	          card.textContent = option;
+	          card.addEventListener("click", () => {
+	            if (questionSelectionLocked) {
+	              return;
+	            }
+	            clearQuestionAdvanceTimer();
+	            resolveCurrentQuestion(index);
+	          });
+	          optionsGrid.appendChild(card);
+	        });
+
+	        startQuestionTimer(QUESTION_SECONDS, () => {
+	          resolveCurrentQuestion(null);
+	        });
+	        startAiRecallEvaluation(result);
+	      }
+
+	      async function startWatchFlow(options = {}) {
+	        const showTransition = Boolean(options.showTransition);
+	        const beginClip = async () => {
+	          if (webgazerStarted && typeof webgazer.resume === "function") {
+	            try {
+	              await webgazer.resume();
+	            } catch (_error) {
+	              // Keep the flow moving even if resume throws intermittently.
+	            }
+	          }
+	          latestAttentionSignal = null;
+	          gameActive = true;
+	          startTrackerMonitor();
+	          void refreshAttentionSignal();
+	          loadVideo();
+	        };
+
+	        clearQuestionAdvanceTimer();
+	        clearQuestionTimers();
+	        clearAiRevealTimers();
+	        showScreen("video");
+	        watchVideo.style.display = "none";
+	        setVideoStartOverlay(false);
+	        updateWatchStatus();
+	        captureLockTag.textContent = "";
+	        watchCompanionText.textContent = showTransition
+	          ? "Answer recorded. Loading the next clip and re-arming attention capture."
+	          : "Attention capture is arming for the first clip.";
+	        if (showTransition) {
+	          showWatchTransition(() => {
+	            void beginClip();
+	          });
+	          return;
+	        }
+	        await beginClip();
+	      }
+
+	      function loadVideo() {
+	        updateWatchStatus();
+	        stopFrameMonitor();
+
+	        if (currentIdx >= selectedVideos.length) {
+	          watchVideo.style.display = "none";
+	          finishRecallFlow();
+	          return;
+	        }
+
+	        const clip = selectedVideos[currentIdx];
+	        watchVideo.style.display = "block";
+	        watchVideo.muted = false;
+	        watchVideo.volume = 1;
+	        captureLockTag.textContent = "";
+	        watchCompanionText.textContent = "analyzing frames";
+	        watchVideo.src = clip.url;
+	        watchVideo.onloadedmetadata = () => {
+	          if (watchVideo.videoWidth && watchVideo.videoHeight) {
+	            watchFrame.style.aspectRatio = watchVideo.videoWidth + " / " + watchVideo.videoHeight;
+	          }
+	        };
+	        watchVideo.onplay = () => {
+	          setVideoStartOverlay(false);
+	          startFrameMonitor();
+	        };
+	        watchVideo.onended = () => {
+	          stopFrameMonitor();
+	          setVideoStartOverlay(false);
+	          showQuestionForCurrentClip();
+	        };
+	        watchVideo.play().then(() => {
+	          setVideoStartOverlay(false);
+	        }).catch(() => {
+	          setVideoStartOverlay(true, "Tap to start this clip with sound");
+	        });
+	      }
+
+	      function renderResults() {
+	        const recallCounts = getRecallCounts();
+	        const aiRecallCounts = getAiRecallCounts();
+	        const total = captureResults.length || 3;
+	        resHumanName.textContent = playerEmail;
+	        humanScore.textContent = String(recallCounts.correctCount);
+	        aiScore.textContent = String(aiRecallCounts.correctCount);
+	        humanFill.style.width = (recallCounts.correctCount / total * 100) + "%";
+	        aiFill.style.width = (aiRecallCounts.correctCount / total * 100) + "%";
+	        if (recallCounts.correctCount > aiRecallCounts.correctCount) {
+	          winnerMessage.textContent = "🏆 HUMAN VICTORY";
+	        } else if (aiRecallCounts.correctCount > recallCounts.correctCount) {
+	          winnerMessage.textContent = "🤖 AI VICTORY";
+	        } else {
+	          winnerMessage.textContent = "⚖️ DRAW";
+	        }
+	        thankYouMessage.style.display = "block";
+	        if (!leaderboardEntrySaved) {
+	          saveLeaderboard(playerEmail, recallCounts.correctCount, aiRecallCounts.correctCount, winnerMessage.textContent);
+	          leaderboardEntrySaved = true;
+	        }
+	      }
+
+	      function getLB() {
+	        return JSON.parse(localStorage.getItem("memduel_lb") || "[]");
+	      }
+
+	      function saveLeaderboard(email, hum, ai, winner) {
+	        const entry = { player: email, humanScore: hum, aiScore: ai, winner };
+	        const board = getLB();
+	        board.unshift(entry);
+	        if (board.length > 20) {
+	          board.pop();
+	        }
+	        localStorage.setItem("memduel_lb", JSON.stringify(board));
+	      }
+
+	      function renderLeaderboard() {
+	        const board = getLB();
+	        const tbody = document.getElementById("leaderboardBody");
+	        tbody.innerHTML = "";
+	        board.forEach((entry, index) => {
+	          const tr = document.createElement("tr");
+	          tr.innerHTML =
+	            "<td>" + (index + 1) + "</td>" +
+	            "<td>" + escapeHtml(entry.player) + "</td>" +
+	            "<td>" + escapeHtml(entry.humanScore) + "</td>" +
+	            "<td>" + escapeHtml(entry.aiScore) + "</td>" +
+	            "<td>" + escapeHtml(entry.winner) + "</td>";
+	          tbody.appendChild(tr);
+	        });
+	      }
+
+      function formatAttentionText(attention) {
+        if (!attention) {
+          return "No valid attention zone";
+        }
+        return attention.zone + " band" + (attention.strength ? " (" + attention.strength + ")" : "");
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+	      goToSummaryBtn.addEventListener("click", () => {
+	        renderResults();
+	        showScreen("result");
+	      });
+
+	      reviewContinueBtn.addEventListener("click", () => {
+	        advanceFromClipReview();
+	      });
+
+	      restartBtn.addEventListener("click", () => {
+	        pauseTracking();
+        resetSession();
+        emailInput.value = "";
+        showScreen("start");
+      });
+
+      async function initWebgazer() {
+        if (webgazerStarted) {
+          return;
+        }
+        if (typeof webgazer === "undefined") {
+          throw new Error("WebGazer script failed to load.");
+        }
+
+        webgazer.params.faceMeshSolutionPath = "./node_modules/webgazer/dist/mediapipe/face_mesh";
+
+        await webgazer
+          .setRegression("ridge")
+          .setTracker("TFFacemesh")
+          .saveDataAcrossSessions(false)
+          .applyKalmanFilter(false)
+          .showVideo(true)
+          .showFaceOverlay(true)
+          .showFaceFeedbackBox(true)
+          .showPredictionPoints(false)
+          .begin();
+
+        if (typeof webgazer.removeMouseEventListeners === "function") {
+          webgazer.removeMouseEventListeners();
+        }
+
+        webgazerStarted = true;
+        setPreviewVisibility(false);
+      }
+
+      function formatWebgazerError(error) {
+        const raw = error && error.message ? error.message : String(error || "Unable to start camera.");
+        if (raw.includes("t is not a function")) {
+          return "WebGazer failed while loading its FaceMesh runtime. Keep serving the page from the repo root over localhost so the local MediaPipe files stay reachable.";
+        }
+        return raw;
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function midpoint(a, b) {
+        if (!a || !b) {
+          return null;
+        }
+        return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      }
+
+      function angleDegrees(a, b) {
+        if (!a || !b) {
+          return 90;
+        }
+        return Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
+      }
+
+      function averagePoint(points) {
+        if (!points.length) {
+          return null;
+        }
+        const sum = points.reduce((accumulator, point) => {
+          accumulator.x += point[0];
+          accumulator.y += point[1];
+          return accumulator;
+        }, { x: 0, y: 0 });
+        return [sum.x / points.length, sum.y / points.length];
+      }
+
+      function getFaceBounds(positions) {
+        let minX = Number.POSITIVE_INFINITY;
+        let maxX = Number.NEGATIVE_INFINITY;
+        let minY = Number.POSITIVE_INFINITY;
+        let maxY = Number.NEGATIVE_INFINITY;
+
+        positions.forEach((point) => {
+          minX = Math.min(minX, point[0]);
+          maxX = Math.max(maxX, point[0]);
+          minY = Math.min(minY, point[1]);
+          maxY = Math.max(maxY, point[1]);
+        });
+
+        return { minX, maxX, minY, maxY };
+      }
+
+      function getEyeRatio(positions, irisIndices, innerIndex, outerIndex) {
+        const irisCenter = averagePoint(
+          irisIndices
+            .map((index) => positions[index])
+            .filter(Boolean)
+        );
+        const inner = positions[innerIndex];
+        const outer = positions[outerIndex];
+
+        if (!irisCenter || !inner || !outer) {
+          return null;
+        }
+
+        const denominator = outer[0] - inner[0];
+        if (Math.abs(denominator) < 0.001) {
+          return null;
+        }
+
+        return clamp((irisCenter[0] - inner[0]) / denominator, 0, 1);
+      }
+
+      function buildAttentionSignal(positions, videoWidth, videoHeight) {
+        if (!positions || positions.length < 360) {
+          return null;
+        }
+
+        const bounds = getFaceBounds(positions);
+        const faceWidth = Math.max(1, bounds.maxX - bounds.minX);
+        const faceCenterX = (bounds.minX + bounds.maxX) / 2;
+        const faceCenterY = (bounds.minY + bounds.maxY) / 2;
+        const leftEyeCenter = midpoint(positions[FACE_POINTS.leftEyeInner], positions[FACE_POINTS.leftEyeOuter]);
+        const rightEyeCenter = midpoint(positions[FACE_POINTS.rightEyeInner], positions[FACE_POINTS.rightEyeOuter]);
+        const nosePoint = positions[FACE_POINTS.noseTip] || positions[4];
+        const faceRatio = faceWidth / Math.max(videoWidth, 1);
+        const centerOffsetX = (faceCenterX / Math.max(videoWidth, 1)) - 0.5;
+        const centerOffsetY = (faceCenterY / Math.max(videoHeight, 1)) - 0.5;
+        const rollDeg = Math.abs(angleDegrees(rightEyeCenter, leftEyeCenter));
+        const signedNoseOffset = nosePoint ? (nosePoint[0] - faceCenterX) / faceWidth : 0;
+        const noseOffset = Math.abs(signedNoseOffset);
+        const leftRatio = getEyeRatio(positions, FACE_POINTS.leftIris, FACE_POINTS.leftEyeInner, FACE_POINTS.leftEyeOuter);
+        const rightRatio = getEyeRatio(positions, FACE_POINTS.rightIris, FACE_POINTS.rightEyeInner, FACE_POINTS.rightEyeOuter);
+        const validRatios = [leftRatio, rightRatio].filter((value) => typeof value === "number");
+        const horizontalRatio = validRatios.length
+          ? validRatios.reduce((sum, value) => sum + value, 0) / validRatios.length
+          : null;
+        const irisScore = horizontalRatio === null ? null : 0.5 - horizontalRatio;
+        const fallbackScore = clamp(-signedNoseOffset * 2.2, -0.5, 0.5);
+        const score = irisScore === null ? fallbackScore : irisScore;
+        const scoreSource = irisScore === null ? "face-yaw" : "iris";
+
+        let zone = null;
+        if (scoreSource === "face-yaw") {
+          if (score > ALIGNMENT_RULES.faceYawCenterTolerance) {
+            zone = "right";
+          } else if (score < -ALIGNMENT_RULES.faceYawCenterTolerance) {
+            zone = "left";
+          } else {
+            zone = "center";
+          }
+        } else if (score !== null) {
+          if (score > ALIGNMENT_RULES.centerZoneTolerance) {
+            zone = "right";
+          } else if (score < -ALIGNMENT_RULES.centerZoneTolerance) {
+            zone = "left";
+          } else {
+            zone = "center";
+          }
+        }
+
+        const blockingIssues = [];
+        const softIssues = [];
+        if (faceRatio < ALIGNMENT_RULES.minFaceRatio) {
+          blockingIssues.push("move-closer");
+        } else if (faceRatio > ALIGNMENT_RULES.maxFaceRatio) {
+          blockingIssues.push("move-back");
+        }
+        if (Math.abs(centerOffsetX) > ALIGNMENT_RULES.maxCenterOffsetX || Math.abs(centerOffsetY) > ALIGNMENT_RULES.maxCenterOffsetY) {
+          blockingIssues.push("center-face");
+        }
+        if (rollDeg > ALIGNMENT_RULES.maxRollDeg) {
+          blockingIssues.push("level-head");
+        }
+        if (noseOffset > ALIGNMENT_RULES.maxNoseOffset) {
+          softIssues.push("face-camera");
+        }
+        if (!zone && irisScore === null) {
+          softIssues.push("eyes-missing");
+        }
+
+        return {
+          timestamp: performance.now(),
+          hasFace: true,
+          ready: blockingIssues.length === 0,
+          issues: blockingIssues.concat(softIssues),
+          blockingIssues,
+          softIssues,
+          zone,
+          score,
+          scoreSource,
+          strength: scoreSource === "iris" && Math.abs(score) >= ALIGNMENT_RULES.strongZoneThreshold ? "strong" : "soft"
+        };
+      }
+
+      async function captureTrackerSnapshot() {
+        if (!webgazerStarted || typeof webgazer === "undefined" || typeof webgazer.getTracker !== "function") {
+          return null;
+        }
+
+        const tracker = webgazer.getTracker();
+        const videoElement = document.getElementById(webgazer.params.videoElementId);
+
+        if (!tracker || !videoElement || !videoElement.videoWidth || typeof tracker.init !== "function") {
+          return null;
+        }
+
+        await tracker.init();
+        const predictions = await tracker.detector.estimateFaces(videoElement);
+        if (!predictions || !predictions.length || !predictions[0].keypoints) {
+          return {
+            timestamp: performance.now(),
+            hasFace: false,
+            ready: false,
+            issues: ["no-face"],
+            zone: null,
+            strength: null
+          };
+        }
+
+        const positions = predictions[0].keypoints.map((point) => [point.x, point.y, point.z || 0]);
+        return buildAttentionSignal(positions, videoElement.videoWidth, videoElement.videoHeight);
+      }
+
+      function getAlignmentMessage(signal) {
+        if (!signal || !signal.hasFace) {
+          return "Face not detected yet. Move into the frame and look at the center.";
+        }
+        if (signal.issues.includes("move-closer")) {
+          return "Move a little closer so your face fills the guide.";
+        }
+        if (signal.issues.includes("move-back")) {
+          return "Move slightly back so your face fits inside the guide.";
+        }
+        if (signal.issues.includes("center-face")) {
+          return "Center your face inside the oval.";
+        }
+        if (signal.issues.includes("level-head")) {
+          return "Level your head and keep it upright.";
+        }
+        if (signal.issues.includes("face-camera")) {
+          return "Turn back toward the camera.";
+        }
+        if (signal.issues.includes("eyes-missing")) {
+          return "Keep your eyes open and look at the middle of the screen.";
+        }
+        return "Alignment locked. Hold steady a moment longer.";
+      }
+
+      function updateAlignmentUi(signal) {
+        if (!signal || !signal.hasFace) {
+          alignmentSatisfiedSince = 0;
+          alignmentStateText.textContent = getAlignmentMessage(signal);
+          setBadgeState(alignmentFaceState, "Face not detected", false);
+          setBadgeState(alignmentPoseState, "Pose not verified", false);
+          setBadgeState(alignmentHoldState, "Hold not started", false);
+          return;
+        }
+
+        const blockingIssues = signal.blockingIssues || signal.issues || [];
+        const faceReady = !blockingIssues.includes("move-closer") && !blockingIssues.includes("move-back");
+        const poseReady = !blockingIssues.includes("center-face") &&
+          !blockingIssues.includes("level-head");
+
+        setBadgeState(
+          alignmentFaceState,
+          faceReady
+            ? "Face framed"
+            : signal.issues.includes("move-closer")
+              ? "Move closer"
+              : "Move back",
+          faceReady
+        );
+        setBadgeState(
+          alignmentPoseState,
+          poseReady
+            ? "Pose verified"
+            : signal.issues.includes("center-face")
+              ? "Center face"
+              : signal.issues.includes("level-head")
+                ? "Level head"
+                : signal.issues.includes("face-camera")
+                  ? "Face camera"
+                  : "Eyes to center",
+          poseReady
+        );
+
+        if (signal.ready) {
+          if (!alignmentSatisfiedSince) {
+            alignmentSatisfiedSince = signal.timestamp;
+          }
+          const progress = clamp((signal.timestamp - alignmentSatisfiedSince) / ALIGNMENT_HOLD_MS, 0, 1);
+          const remainingSeconds = ((1 - progress) * ALIGNMENT_HOLD_MS / 1000).toFixed(1);
+          setBadgeState(alignmentHoldState, progress >= 1 ? "Hold complete" : "Hold " + Math.round(progress * 100) + "%", true);
+          alignmentStateText.textContent = progress >= 1
+            ? "Alignment accepted. Starting watch phase now."
+            : "Alignment locked. Hold steady for " + remainingSeconds + "s.";
+          if (progress >= 1 && !aligned) {
+            finishAlignment();
+          }
+          return;
+        }
+
+        alignmentSatisfiedSince = 0;
+        setBadgeState(alignmentHoldState, "Hold not started", false);
+        alignmentStateText.textContent = getAlignmentMessage(signal);
+      }
+
+      function positionWebgazerPreview() {
+        if (!webgazerStarted || currentScreenName !== "alignment" || !pageMap.game.classList.contains("active")) {
+          return;
+        }
+
+        const container = document.getElementById(webgazer.params.videoContainerId);
+        const videoElement = document.getElementById(webgazer.params.videoElementId);
+        const overlay = document.getElementById(webgazer.params.faceOverlayId);
+        const feedback = document.getElementById(webgazer.params.faceFeedbackBoxId);
+        const slotWidth = alignmentPreviewSlot.clientWidth;
+        const slotHeight = alignmentPreviewSlot.clientHeight;
+
+        if (!container || !videoElement || !slotWidth || !slotHeight) {
+          return;
+        }
+
+        if (container.parentElement !== alignmentPreviewSlot) {
+          alignmentPreviewSlot.prepend(container);
+        }
+
+        if (typeof webgazer.setVideoViewerSize === "function") {
+          webgazer.setVideoViewerSize(Math.round(slotWidth), Math.round(slotHeight));
+        }
+
+        container.style.position = "absolute";
+        container.style.left = "0";
+        container.style.top = "0";
+        container.style.right = "auto";
+        container.style.bottom = "auto";
+        container.style.width = slotWidth + "px";
+        container.style.height = slotHeight + "px";
+        container.style.borderRadius = "24px";
+        container.style.overflow = "hidden";
+        container.style.background = "transparent";
+        container.style.pointerEvents = "none";
+        container.style.zIndex = "1";
+        container.style.boxShadow = "none";
+
+        videoElement.style.position = "absolute";
+        videoElement.style.left = "0";
+        videoElement.style.top = "0";
+        videoElement.style.right = "auto";
+        videoElement.style.bottom = "auto";
+        videoElement.style.width = slotWidth + "px";
+        videoElement.style.height = slotHeight + "px";
+        videoElement.style.objectFit = "cover";
+        videoElement.style.objectPosition = "center";
+        videoElement.style.borderRadius = "24px";
+
+        if (overlay) {
+          overlay.style.position = "absolute";
+          overlay.style.left = "0";
+          overlay.style.top = "0";
+          overlay.style.right = "auto";
+          overlay.style.bottom = "auto";
+          overlay.style.width = slotWidth + "px";
+          overlay.style.height = slotHeight + "px";
+          overlay.style.borderRadius = "24px";
+          overlay.style.pointerEvents = "none";
+        }
+
+        if (feedback) {
+          feedback.style.position = "absolute";
+          feedback.style.right = "auto";
+          feedback.style.bottom = "auto";
+          feedback.style.borderRadius = "50% / 56%";
+          feedback.style.borderWidth = "2px";
+          feedback.style.boxShadow = "0 0 30px rgba(76, 214, 255, 0.18)";
+        }
+      }
+
+      function setPreviewVisibility(visible) {
+        if (!webgazerStarted || typeof webgazer === "undefined") {
+          return;
+        }
+
+        if (typeof webgazer.showVideo === "function") {
+          webgazer.showVideo(visible);
+        }
+        if (typeof webgazer.showFaceOverlay === "function") {
+          webgazer.showFaceOverlay(visible);
+        }
+        if (typeof webgazer.showFaceFeedbackBox === "function") {
+          webgazer.showFaceFeedbackBox(visible);
+        }
+
+        const container = document.getElementById(webgazer.params.videoContainerId);
+        if (container) {
+          container.style.opacity = visible ? "1" : "0";
+        }
+
+        if (visible) {
+          requestAnimationFrame(positionWebgazerPreview);
+          setTimeout(positionWebgazerPreview, 200);
+        }
+      }
+
+      function stopTrackerMonitor() {
+        if (trackerMonitorId !== null) {
+          cancelAnimationFrame(trackerMonitorId);
+        }
+        trackerMonitorId = null;
+        trackerMonitorLastTick = 0;
+      }
+
+      async function refreshAttentionSignal() {
+        if (trackerSampleInFlight || !webgazerStarted) {
+          return;
+        }
+
+        trackerSampleInFlight = true;
+        try {
+          latestAttentionSignal = await captureTrackerSnapshot();
+          if (currentScreenName === "alignment") {
+            updateAlignmentUi(latestAttentionSignal);
+          }
+        } catch (error) {
+          if (currentScreenName === "alignment") {
+            alignmentStateText.textContent = "Face tracking stalled: " + formatWebgazerError(error);
+          }
+        } finally {
+          trackerSampleInFlight = false;
+        }
+      }
+
+      function startTrackerMonitor() {
+        stopTrackerMonitor();
+
+        const tick = (now) => {
+          if (now - trackerMonitorLastTick >= ALIGNMENT_SAMPLE_MS) {
+            trackerMonitorLastTick = now;
+            refreshAttentionSignal();
+          }
+          if (webgazerStarted && (currentScreenName === "alignment" || gameActive)) {
+            trackerMonitorId = requestAnimationFrame(tick);
+          } else {
+            trackerMonitorId = null;
+          }
+        };
+
+        trackerMonitorId = requestAnimationFrame(tick);
+      }
+
+      function pauseTracking() {
+        stopTrackerMonitor();
+        latestAttentionSignal = null;
+        alignmentSatisfiedSince = 0;
+        setPreviewVisibility(false);
+        if (webgazerStarted && typeof webgazer.pause === "function") {
+          webgazer.pause();
+        }
+      }
+
+      async function beginAlignment(options = {}) {
+        const autoStart = Boolean(options.autoStart);
+        startAlignmentBtn.disabled = true;
+        startAlignmentBtn.textContent = autoStart ? "Starting camera..." : "Restarting...";
+        try {
+          alignmentStateText.textContent = "Starting camera and WebGazer...";
+          await initWebgazer();
+          if (typeof webgazer.resume === "function") {
+            await webgazer.resume();
+          }
+          latestAttentionSignal = null;
+          alignmentSatisfiedSince = 0;
+          setPreviewVisibility(true);
+          positionWebgazerPreview();
+          startTrackerMonitor();
+          await refreshAttentionSignal();
+          alignmentStateText.textContent = "Center your face inside the oval and look at the middle of the screen.";
+          startAlignmentBtn.disabled = false;
+          startAlignmentBtn.textContent = "↻ Restart Camera";
+        } catch (error) {
+          alignmentStateText.textContent = "WebGazer failed: " + formatWebgazerError(error);
+          startAlignmentBtn.disabled = false;
+          startAlignmentBtn.textContent = "↻ Retry Camera";
+        }
+      }
+
+	      function finishAlignment() {
+	        aligned = true;
+	        setPreviewVisibility(false);
+	        currentIdx = 0;
+	        void startWatchFlow();
+	      }
+
+      startAlignmentBtn.addEventListener("click", beginAlignment);
+
+      window.addEventListener("beforeunload", () => {
+        stopFrameMonitor();
+        stopTrackerMonitor();
+        if (webgazerStarted && typeof webgazer.end === "function") {
+          webgazer.end();
+        }
+      });
+
+      window.addEventListener("resize", positionWebgazerPreview);
+
+      switchPage("game");
+      showScreen("start");
+    })();
+  </script>
+</body>
+</html>
